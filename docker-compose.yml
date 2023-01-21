@@ -1,0 +1,25 @@
+version: '3'
+services:
+  build_bot:
+    build:
+      context: ./docker/node
+      args:
+        DOCKER_USER_UID: ${DOCKER_USER_UID:?Missing DOCKER_USER_UID}
+        DOCKER_USER_GID: ${DOCKER_USER_GID:?Missing DOCKER_USER_GID}
+    volumes:
+      - ./:/mojira-bot
+    command: |-
+      bash -c "cd /mojira-bot && npm ci && npm run build"
+  bot:
+    build:
+      context: ./docker/node
+      args:
+        DOCKER_USER_UID: ${DOCKER_USER_UID:?Missing DOCKER_USER_UID}
+        DOCKER_USER_GID: ${DOCKER_USER_GID:?Missing DOCKER_USER_GID}
+    restart: on-failure
+    depends_on:
+      - build_bot
+    volumes:
+      - ./:/mojira-bot
+    command: |-
+      bash -c "cd /mojira-bot && NODE_ENV=${PROFILE:-main} npm run bot"
